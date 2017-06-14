@@ -4,6 +4,8 @@ import com.jcdeck.matrix.Matrix;
 
 /**
  * 
+ * This is a change to the Java docs
+ * 
  * This neural network is designed to take a set of input and output values
  * and train the network so that it can predict the outputs for any given
  * set of input values.
