@@ -1,11 +1,10 @@
 package com.jcdeck.neuralNetwork;
 
+//import matrix.Matrix;
+
 import com.jcdeck.matrix.Matrix;
 
 /**
- * 
- * This is a change to the Java docs
- * 
  * This neural network is designed to take a set of input and output values
  * and train the network so that it can predict the outputs for any given
  * set of input values.
@@ -27,16 +26,26 @@ public class Network {
 	 * the input matrix
 	 */
 	public Network(NNMatrix input, int hiddenLayerSize, NNMatrix output){
-		this.inputLayerSize = input.getNumOfNodes();
-		this.hiddenLayerSize = hiddenLayerSize;
-		this.outputLayerSize = output.getNumOfNodes();
 		
 		this.trainningInput = input;
 		this.trainningOutput = output;
 		
+		if(input != null && output != null){
+			this.inputLayerSize = input.getNumOfNodes();
+			this.hiddenLayerSize = hiddenLayerSize;
+			this.outputLayerSize = output.getNumOfNodes();
+		}else{
+			this.inputLayerSize = 0;
+			this.hiddenLayerSize = 0;
+			this.outputLayerSize = 0;
+		}
+		
 		//init weights
 		this.weights1 = Matrix.randomGaussian(this.inputLayerSize, this.hiddenLayerSize);
 		this.weights2 = Matrix.randomGaussian(this.hiddenLayerSize, this.outputLayerSize);
+		
+		weights1.print();
+		weights2.print();
 		
 	}
 	
@@ -71,11 +80,11 @@ public class Network {
 	/**
 	 * the input data set used for training the network
 	 */
-	private NNMatrix trainningInput;
+	private final NNMatrix trainningInput;
 	/**
 	 * the output data set used for training the network
 	 */
-	private NNMatrix trainningOutput;
+	private final NNMatrix trainningOutput;
 	
 	//SIZES OF THE LAYERS
 	
@@ -144,29 +153,24 @@ public class Network {
 	
 	
 	
-	/**
-	 * maximum number of iterations that will be made when training the neural
-	 * network. Prevents infinite loop.
-	 */
-	private final static int MAX_TRAINING_ITERATIONS = 100000;
-	
-	
-	
 	
 	//TRAINING FUNCTION
 	
 	/**
 	 * Performs forward and backward propagation on the network with the
-	 * stored matrixes until the error is less than 'epsilon'. It has
-	 * a max of 1,000,000 iterations. The learning rate will be multiplied
-	 * by deltaAlpha every step.
+	 * stored matrixes until the error is less than 'epsilon'. The learning
+	 * rate will be multiplied by deltaAlpha after every step.
 	 * 
 	 * @param alpha initial learning rate. Normally between 1 and 10
 	 * @param deltaAlpha rate at which {@code alpha} will be changed. Normally
 	 * between 0.9999 and 0.99999999
 	 * @param epsilon lowest acceptable value for the error
+	 * @param  maxIterations maximum number of iterations that will be made when training the neural
+	 * network. Prevents infinite loop.
 	 */
-	public NNTrainingData train(double alpha, double deltaAlpha, double epsilon){
+	public NNTrainingData train(double alpha, double deltaAlpha, double epsilon, int maxIterations){
+		
+		System.out.println("Beginning training");
 		
 		//create a data object to return with information about the training
 		NNTrainingData data = new NNTrainingData();
@@ -174,11 +178,12 @@ public class Network {
 		//record the start time to calculate the duration of the training
 		long startTime = System.nanoTime();
 		
-		
-		for(int i = 0; i<Network.MAX_TRAINING_ITERATIONS; i++){
+		int i;
+		for(i = 0; i<maxIterations; i++){
 			
 			//forward propagate the input
-			this.forward(this.trainningInput);
+			//this.forward(this.trainningInput);
+			
 			
 			//get the error of the prediction
 			final double J = this.costFunction(this.trainningInput, this.trainningOutput);
@@ -194,7 +199,6 @@ public class Network {
 			
 			//if the weight (J) is an acceptable value (less than epsilon) then training is complete
 			if(J < epsilon){
-				data.setIterations(i);
 				break;
 			}
 			
@@ -202,6 +206,7 @@ public class Network {
 			alpha *= deltaAlpha;
 			
 		}
+		
 		
 		long endTime = System.nanoTime();
 		
@@ -232,7 +237,6 @@ public class Network {
 		this.z2 = input.times(weights1);
 		this.a2 = this.getSigmoid(z2);
 		this.z3 = a2.times(weights2);
-		
 		this.yHat = this.getSigmoid(z3);
 		
 		return this.yHat;
@@ -268,7 +272,7 @@ public class Network {
 		//pass each element of b into the sigmoid function and store it in c
 		for(int i = 0; i<b.getM(); i++)
 			for(int j = 0; j<b.getN(); j++)
-				c.set(getSigmoid(b.get(i, j)), i, j);
+				c.set( getSigmoid(b.get(i, j)), i, j);
 		//return the resulting matrix
 		return c;
 	}
@@ -329,17 +333,35 @@ public class Network {
 	 */
 	private double costFunction(Matrix X, Matrix y){
 
+//		System.out.println("costFunction() Broken:");
 		forward(X);
 		
         //#J = 0.5*sum((y-self.yHat)**2)
 		
+
+//		System.out.println("  Matrix yHat:");
+//		yHat.print();
+//		
+//
+//		System.out.println("  Matrix y:");
+//		y.print();
+		
 		//find the difference between the actual output and the output the Network predicted
 		Matrix c = y.minus(this.yHat);
+
+//		System.out.println("  Matrix c:");
+//		c.print();
+//		
 		//square each error for each testing case
 		Matrix d = c.raiseTo(2);
 		
+
+//		System.out.println("  Matrix d:");
+//		d.print();
+		
 		//return the half the sum
-		return d.sum() / 2;
+		final double cost =  d.sum() / 2;
+		return cost;
 	}
 	
 	/**
@@ -419,6 +441,47 @@ public class Network {
 	}
 	
 	
+	
+	
+	//TESTING
+//	public static void main(String[] args){
+//		double[][] in = {
+//				{3, 5},
+//				{5, 1},
+//				{10, 2}
+//		};
+//		NNMatrix input = new NNMatrix(in);
+//		input.normilize();
+//		double[][] out = {
+//				{0.75},
+//				{0.82},
+//				{0.93}
+//		};
+//		NNMatrix output = new NNMatrix(out);
+//		//Matrix output = outpu.multiplyBy(0.01);
+//		
+//		Network network = new Network(input, 3, output);
+//		
+//		System.out.println("\nInitial Predictions");
+//		Matrix firstTest = network.predict(input);
+//		firstTest.print();
+//		System.out.println();
+//		
+//		NNTrainingData d = network.train(10, 0.999, 0.000001);
+//		
+//		System.out.println(d);
+//		
+//
+//		System.out.println("\nFinal Predictions");
+//		Matrix secondTest = network.predict(input);
+//		secondTest.print();
+//		System.out.println();
+//		
+//		NNMatrix test = new NNMatrix(new double[][] {{8/24.0, 3/24.0}});
+//		
+//		network.predict(test).print();
+//		
+//	}
 	
 	
 }

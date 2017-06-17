@@ -1,6 +1,15 @@
 package com.jcdeck.neuralNetwork;
 
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 
 /**
  * Holds data about training the {@link Network}. Returned after the network has
@@ -25,17 +34,6 @@ public class NNTrainingData {
 	 * Time it took the network to be trained in milliseconds
 	 */
 	private double duration;
-	
-	/**
-	 * The number of iterations it took the network to reduce the error to
-	 * an acceptable amount
-	 */
-	private int iterations;
-	
-	/**
-	 * The final error of the network
-	 */
-	private double finalError;
 	
 	/**
 	 * the error at each iteration of the network
@@ -65,17 +63,6 @@ public class NNTrainingData {
 	
 	
 	/**
-	 * Sets the number of iterations that it took to train the network so
-	 * that the error was an acceptable value. The number of iterations is the
-	 * number of times forward and backward propagation occurred.
-	 * 
-	 * @param iterations the number of iteration taken when training the netwoRk
-	 */
-	void setIterations(int iterations){
-		this.iterations = iterations;
-	}
-	
-	/**
 	 * Returns the number of iterations that it took to train the network so
 	 * that the error was an acceptable value. The number of iterations is the
 	 * number of times forward and backward propagation occurred.
@@ -83,21 +70,10 @@ public class NNTrainingData {
 	 * @return the number of iteration taken when training the netwoRk
 	 */
 	public int getIterations(){
-		return this.iterations;
+		return this.J.size();
 	}
 	
 	
-	
-	/**
-	 * Sets the final error of the network produced when the training matrix
-	 * was propagated through it. Should be less that the maximum error acceptable
-	 * unless the network hit the maximum number of iterations.
-	 * 
-	 * @param finalError error after training the network
-	 */
-	void finalError(double finalError){
-		this.finalError = finalError;
-	}
 	
 	/**
 	 * Returns the final error of the network produced when the training matrix
@@ -107,7 +83,7 @@ public class NNTrainingData {
 	 * @return error after training the network
 	 */
 	public double getFinalError(){
-		return this.finalError;
+		return this.J.get(J.size()-1);
 	}
 	
 	
@@ -137,6 +113,60 @@ public class NNTrainingData {
 		for(int i = 0; i<d.length; i++)
 			d[i] = J.get(i);
 		return d;
+	}
+	
+	
+	
+	//JFRAME
+	private JFrame costGraph;
+	
+	public void showCostGraph(int size){
+		
+		costGraph = new JFrame("Neural Network Cost Graph");
+		JPanel panel = new JPanel();
+		
+		//max error
+		double[] costs = this.getCostGraph();
+		double maxError = 0;
+		for(int i = 0; i<costs.length; i++)
+			maxError = Math.max(maxError, costs[i]);
+		
+		BufferedImage bimage = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g = bimage.createGraphics();
+		g.setColor(Color.WHITE);
+		g.fillRect(0, 0, size, size);
+		size -= 10;
+		g.setColor(Color.BLUE);
+		g.setStroke(new BasicStroke(3));
+		for(int i = 0; i<size-1; i++){
+			final int index = (int) (((double)i/size)*costs.length);
+			final int height1 = (int) ((costs[index]/maxError) * size);
+			final int height2 = (int) ((costs[index+1]/maxError) * size);
+			g.drawLine(i+5, size-height1+15, i+6, size-height2+15);
+		}
+		g.dispose();
+		
+		panel.add(new JLabel(new ImageIcon(bimage)));
+		costGraph.add(panel);
+		
+		costGraph.validate();
+		costGraph.repaint();
+		costGraph.pack();
+		costGraph.setVisible(true);
+		
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	@Override
+	public String toString(){
+		return this.getIterations()+" iterations to get an error of "+this.getFinalError();
 	}
 	
 }
