@@ -7,3 +7,5 @@ input and the other output. The network adjusts the weights used to propagate th
 that when given input, it can correctly predict the output. After trainning, NNTrainingData is returned containing
 information about the training. The included information is the duration the training took, the number of iterations
 that occurred, and the error of each iteration.
+
+NOTE: The NNMatrix extends the Marix class from a different project.
